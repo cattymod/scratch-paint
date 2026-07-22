@@ -1,6 +1,6 @@
 # cattymod/scratch-paint
 
-Modified version of scratch-paint from Turbowarp and PenguinMod and MistWarp for use in CattyMod.
+Modified version of scratch-paint from TurboWarp and PenguinMod and MistWarp for use in CattyMod.
 Uses @turbowarp/paper as it includes some nice fixes.
 
 ## License
