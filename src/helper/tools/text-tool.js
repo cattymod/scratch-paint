@@ -41,6 +41,7 @@ class TextTool extends paper.Tool {
     static get TEXT_PADDING () {
         return 8;
     }
+
     /**
      * @param {HTMLTextAreaElement} textAreaElement dom element for the editable text field
      * @param {function} setSelectedItems Callback to set the set of selected items in the Redux state
@@ -49,7 +50,7 @@ class TextTool extends paper.Tool {
      * @param {!function} onUpdateImage A callback to call when the image visibly changes
      * @param {!function} setTextEditTarget Call to set text editing target whenever text editing is active
      * @param {!function} changeFont Call to change the font in the dropdown
-     * @param {!function} changeAlignment Call to change the current text alignment
+     * @param {function} changeAlignment Call to change the current text alignment
      * @param {?boolean} isBitmap True if text should be rasterized once it's deselected
      */
     constructor (textAreaElement, setSelectedItems, clearSelectedItems, setCursor, onUpdateImage, setTextEditTarget,
@@ -62,7 +63,9 @@ class TextTool extends paper.Tool {
         this.setTextEditTarget = setTextEditTarget;
         this.changeFont = changeFont;
         this.changeAlignment = changeAlignment;
+
         const paintMode = isBitmap ? Modes.BIT_TEXT : Modes.TEXT;
+
         this.boundingBoxTool = new BoundingBoxTool(
             paintMode,
             setSelectedItems,
@@ -70,7 +73,13 @@ class TextTool extends paper.Tool {
             setCursor,
             onUpdateImage
         );
-        this.nudgeTool = new NudgeTool(paintMode, this.boundingBoxTool, onUpdateImage);
+
+        this.nudgeTool = new NudgeTool(
+            paintMode,
+            this.boundingBoxTool,
+            onUpdateImage
+        );
+
         this.isBitmap = isBitmap;
 
         // We have to set these functions instead of just declaring them because
@@ -93,6 +102,7 @@ class TextTool extends paper.Tool {
         // If text selected and then activate this tool, switch to text edit mode for that text
         // If double click on text while in select mode, does mode change to text mode? Text fully selected by default
     }
+
     getBoundingBoxHitOptions () {
         return {
             segments: true,
@@ -102,10 +112,11 @@ class TextTool extends paper.Tool {
             guide: false,
             match: hitResult =>
                 (hitResult.item.data && (hitResult.item.data.isScaleHandle || hitResult.item.data.isRotHandle)) ||
-                hitResult.item.selected, // Allow hits on bounding box and selected only
+                hitResult.item.selected,
             tolerance: TextTool.TOLERANCE / paper.view.zoom
         };
     }
+
     getTextEditHitOptions () {
         return {
             class: paper.PointText,
@@ -116,16 +127,18 @@ class TextTool extends paper.Tool {
             guide: false,
             match: hitResult => hitResult.item &&
                 !(hitResult.item.data && hitResult.item.data.isHelperItem) &&
-                !hitResult.item.selected, // Unselected only
+                !hitResult.item.selected,
             tolerance: TextTool.TOLERANCE / paper.view.zoom
         };
     }
+
     /**
      * Called when the selection changes to update the bounds of the bounding box.
      * @param {Array<paper.Item>} selectedItems Array of selected items.
      */
     onSelectionChanged (selectedItems) {
         this.boundingBoxTool.onSelectionChanged(selectedItems);
+
         if ((!this.textBox || !this.textBox.parent) &&
                 selectedItems && selectedItems.length === 1 && selectedItems[0] instanceof paper.PointText) {
             // Infer that an undo occurred and get back the active text
@@ -133,35 +146,46 @@ class TextTool extends paper.Tool {
             this.mode = TextTool.SELECT_MODE;
         }
     }
+
     setFont (font) {
         this.font = font;
+
         if (this.textBox) {
             this.textBox.font = font;
         }
+
         const selected = getSelectedLeafItems();
+
         for (const item of selected) {
             if (item instanceof paper.PointText) {
                 item.font = font;
             }
         }
+
         this.element.style.fontFamily = font;
         this.setSelectedItems();
     }
+
     setAlignment (alignment) {
         this.alignment = alignment;
+
         if (this.textBox) {
             this.textBox.justification = alignment;
         }
+
         this.setSelectedItems();
     }
+
     // Allow other tools to cancel text edit mode
     onTextEditCancelled () {
         if (this.mode !== TextTool.TEXT_EDIT_MODE) {
             return;
         }
+
         this.endTextEdit();
         this.beginSelect();
     }
+
     /**
      * Called when the view matrix changes
      * @param {paper.Matrix} viewMtx applied to paper.view
@@ -170,8 +194,10 @@ class TextTool extends paper.Tool {
         if (this.mode !== TextTool.TEXT_EDIT_MODE) {
             return;
         }
+
         this.calculateMatrix(viewMtx);
     }
+
     calculateMatrix (viewMtx) {
         const textBoxMtx = this.textBox.matrix;
         const calculated = new paper.Matrix();
@@ -180,35 +206,55 @@ class TextTool extends paper.Tool {
         // The offset from (0, 0) to the upper left corner is recorded by internalBounds
         // (so this.textBox.internalBounds.y is negative).
         // Move the transform origin down to the text baseline to match paper
-        this.element.style.transformOrigin = `${-this.textBox.internalBounds.x}px ${-this.textBox.internalBounds.y}px`;
+        this.element.style.transformOrigin =
+            `${-this.textBox.internalBounds.x}px ${-this.textBox.internalBounds.y}px`;
 
         // Start by translating the element up so that its (0, 0) is now at the text baseline, like in paper
-        calculated.translate(this.textBox.internalBounds.x, this.textBox.internalBounds.y);
+        calculated.translate(
+            this.textBox.internalBounds.x,
+            this.textBox.internalBounds.y
+        );
+
         calculated.append(viewMtx);
         calculated.append(textBoxMtx);
+
         this.element.style.transform = `matrix(${calculated.a}, ${calculated.b}, ${calculated.c}, ${calculated.d},
              ${calculated.tx}, ${calculated.ty})`;
     }
+
     setColorState (colorState) {
         this.colorState = colorState;
     }
+
     handleMouseMove (event) {
-        const hitResults = paper.project.hitTestAll(event.point, this.getTextEditHitOptions());
+        const hitResults = paper.project.hitTestAll(
+            event.point,
+            this.getTextEditHitOptions()
+        );
+
         if (hitResults.length) {
             document.body.style.cursor = 'text';
         } else {
             document.body.style.cursor = 'auto';
         }
-        this.boundingBoxTool.onMouseMove(event, this.getBoundingBoxHitOptions());
+
+        this.boundingBoxTool.onMouseMove(
+            event,
+            this.getBoundingBoxHitOptions()
+        );
     }
+
     handleMouseDown (event) {
-        if (event.event.button > 0) return; // only first mouse button
+        if (event.event.button > 0) return;
+
         this.active = true;
 
         // Check if double clicked
         const doubleClicked = this.lastEvent &&
             (event.event.timeStamp - this.lastEvent.event.timeStamp) < TextTool.DOUBLE_CLICK_MILLIS;
+
         this.lastEvent = event;
+
         if (doubleClicked &&
                 this.mode === TextTool.SELECT_MODE &&
                 this.textBox.hitTest(event.point)) {
@@ -221,15 +267,21 @@ class TextTool extends paper.Tool {
 
         // In select mode staying in select mode
         if (this.boundingBoxTool.onMouseDown(
-            event, false /* clone */, false /* multiselect */, false /* doubleClicked */,
-            this.getBoundingBoxHitOptions())) {
+            event,
+            false,
+            false,
+            false,
+            this.getBoundingBoxHitOptions()
+        )) {
             return;
         }
 
         // We clicked away from the item, so end the current mode
         const lastMode = this.mode;
+
         if (this.mode === TextTool.SELECT_MODE) {
             this.endSelect();
+
             if (this.isBitmap) {
                 this.commitText();
             }
@@ -237,7 +289,11 @@ class TextTool extends paper.Tool {
             this.endTextEdit();
         }
 
-        const hitResults = paper.project.hitTestAll(event.point, this.getTextEditHitOptions());
+        const hitResults = paper.project.hitTestAll(
+            event.point,
+            this.getTextEditHitOptions()
+        );
+
         if (hitResults.length) {
             // Clicking a different text item to begin text edit mode on that item
             this.beginTextEdit(hitResults[0].item);
@@ -251,27 +307,36 @@ class TextTool extends paper.Tool {
                 content: '',
                 font: this.font,
                 fontSize: 40,
+
                 // TODO: style using gradient
                 // https://github.com/LLK/scratch-paint/issues/1164
                 fillColor: this.colorState.fillColor.primary,
+
+                // Vector Text Outline support
+                strokeColor: this.colorState.strokeColor.primary,
+                strokeWidth: this.colorState.strokeWidth || 0,
+
                 // Default leading for both the HTML text area and paper.PointText
                 // is 120%, but for some reason they are slightly off from each other.
                 // This value was obtained experimentally.
                 leading: 46.15
             });
+
             this.beginTextEdit(this.textBox);
         }
     }
+
     handleMouseDrag (event) {
-        if (event.event.button > 0 || !this.active) return; // only first mouse button
+        if (event.event.button > 0 || !this.active) return;
 
         if (this.mode === TextTool.SELECT_MODE) {
             this.boundingBoxTool.onMouseDrag(event);
             return;
         }
     }
+
     handleMouseUp (event) {
-        if (event.event.button > 0 || !this.active) return; // only first mouse button
+        if (event.event.button > 0 || !this.active) return;
 
         if (this.mode === TextTool.SELECT_MODE) {
             this.boundingBoxTool.onMouseUp(event);
@@ -281,8 +346,10 @@ class TextTool extends paper.Tool {
 
         this.active = false;
     }
+
     handleKeyUp (event) {
-        if (event.event.target instanceof HTMLInputElement || event.event.target instanceof HTMLTextAreaElement) {
+        if (event.event.target instanceof HTMLInputElement ||
+            event.event.target instanceof HTMLTextAreaElement) {
             // Ignore nudge if a text input field is focused
             return;
         }
@@ -291,54 +358,78 @@ class TextTool extends paper.Tool {
             this.nudgeTool.onKeyUp(event);
         }
     }
+
     handleKeyDown (event) {
-        if (event.event.target instanceof HTMLInputElement || event.event.target instanceof HTMLTextAreaElement) {
+        if (event.event.target instanceof HTMLInputElement ||
+            event.event.target instanceof HTMLTextAreaElement) {
             // Ignore nudge if a text input field is focused
             return;
         }
+
         if (this.mode === TextTool.TEXT_EDIT_MODE && event.key === 'escape') {
             this.endTextEdit();
         }
+
         if (this.mode === TextTool.SELECT_MODE) {
             this.nudgeTool.onKeyDown(event);
         }
     }
+
     handleTextInput (event) {
         // Save undo state if you paused typing for long enough.
-        if (this.lastTypeEvent && event.timeStamp - this.lastTypeEvent.timeStamp > TextTool.TYPING_TIMEOUT_MILLIS) {
+        if (this.lastTypeEvent &&
+                event.timeStamp - this.lastTypeEvent.timeStamp > TextTool.TYPING_TIMEOUT_MILLIS) {
             // Select the textbox so that it will be selected if the user performs undo.
             this.textBox.selected = true;
             this.onUpdateImage();
             this.textBox.selected = false;
         }
+
         this.lastTypeEvent = event;
+
         if (this.mode === TextTool.TEXT_EDIT_MODE) {
             this.textBox.content = this.element.value;
         }
-        if (this.alignment !== "left") this.calculateMatrix(paper.view.matrix);
+
+        if (this.alignment !== 'left') {
+            this.calculateMatrix(paper.view.matrix);
+        }
+
         this.resizeGuide();
     }
+
     resizeGuide () {
-        if (this.guide) this.guide.remove();
-        this.guide = hoverBounds(this.textBox, TextTool.TEXT_PADDING);
+        if (this.guide) {
+            this.guide.remove();
+        }
+
+        this.guide = hoverBounds(
+            this.textBox,
+            TextTool.TEXT_PADDING
+        );
+
         this.guide.dashArray = [4, 4];
+
         // Prevent line from wrapping
         this.element.style.width = `${this.textBox.internalBounds.width + 1}px`;
         this.element.style.height = `${this.textBox.internalBounds.height}px`;
-        this.element.style.textAlign = "left";
+        this.element.style.textAlign = 'left';
 
         // The transform origin needs to be updated in RTL because this.textBox.internalBounds.x
         // changes as you type
-        if (this.alignment === "right") {
-            this.element.style.textAlign = "right";
+        if (this.alignment === 'right') {
+            this.element.style.textAlign = 'right';
             this.element.style.transformOrigin =
                 `${-this.textBox.internalBounds.x}px ${-this.textBox.internalBounds.y}px`;
         }
-        if (this.alignment === "center") {  
-            this.element.style.textAlign = "center";
-            this.element.style.transformOrigin = `center ${-this.textBox.internalBounds.y}px`;
+
+        if (this.alignment === 'center') {
+            this.element.style.textAlign = 'center';
+            this.element.style.transformOrigin =
+                `center ${-this.textBox.internalBounds.y}px`;
         }
     }
+
     beginSelect () {
         if (this.textBox) {
             this.mode = TextTool.SELECT_MODE;
@@ -346,10 +437,12 @@ class TextTool extends paper.Tool {
             this.setSelectedItems();
         }
     }
+
     endSelect () {
         clearSelection(this.clearSelectedItems);
         this.mode = null;
     }
+
     /**
      * @param {paper.PointText} textBox Text object to begin text edit on
      */
@@ -357,33 +450,42 @@ class TextTool extends paper.Tool {
         this.textBox = textBox;
         this.mode = TextTool.TEXT_EDIT_MODE;
         this.setTextEditTarget(this.textBox.id);
+
         if (this.font !== this.textBox.font) {
             this.changeFont(this.textBox.font);
         }
+
         if (this.alignment !== this.textBox.justification) {
             this.changeAlignment(this.textBox.justification);
         }
+
         this.element.style.fontSize = `${this.textBox.fontSize}px`;
-        this.element.style.lineHeight = this.textBox.leading / this.textBox.fontSize;
+        this.element.style.lineHeight =
+            this.textBox.leading / this.textBox.fontSize;
 
         const fillColor = getTextColor(textBox);
         this.element.style.color = fillColor ? fillColor.toCSS() : '';
 
         this.element.style.display = 'initial';
         this.element.value = textBox.content ? textBox.content : '';
+
         this.calculateMatrix(paper.view.matrix);
 
         this.textBox.justification = this.alignment;
 
         this.element.focus({preventScroll: true});
+
         this.eventListener = this.handleTextInput.bind(this);
         this.element.addEventListener('input', this.eventListener);
+
         this.resizeGuide();
     }
+
     endTextEdit () {
         if (this.mode !== TextTool.TEXT_EDIT_MODE) {
             return;
         }
+
         this.mode = null;
 
         // Remove invisible textboxes
@@ -398,11 +500,14 @@ class TextTool extends paper.Tool {
             this.guide = null;
             this.setTextEditTarget();
         }
+
         this.element.style.display = 'none';
+
         if (this.eventListener) {
             this.element.removeEventListener('input', this.eventListener);
             this.eventListener = null;
         }
+
         if (this.textBox && this.lastTypeEvent) {
             // Finished editing a textbox, save undo state
             // Select the textbox so that it will be selected if the user performs undo.
@@ -412,28 +517,43 @@ class TextTool extends paper.Tool {
             this.lastTypeEvent = null;
         }
     }
+
     commitText () {
         if (!this.textBox || !this.textBox.parent) return;
 
         // @todo get crisp text https://github.com/LLK/scratch-paint/issues/508
-        const textRaster = this.textBox.rasterize(72, false /* insert */, this.textBox.drawnBounds);
+        const textRaster = this.textBox.rasterize(
+            72,
+            false,
+            this.textBox.drawnBounds
+        );
+
         this.textBox.remove();
         this.textBox = null;
+
         getRaster().drawImage(
             textRaster.canvas,
-            new paper.Point(Math.floor(textRaster.bounds.x), Math.floor(textRaster.bounds.y))
+            new paper.Point(
+                Math.floor(textRaster.bounds.x),
+                Math.floor(textRaster.bounds.y)
+            )
         );
+
         this.onUpdateImage();
     }
+
     deactivateTool () {
         if (this.textBox && this.textBox.content.trim() === '') {
             this.textBox.remove();
             this.textBox = null;
         }
+
         this.endTextEdit();
+
         if (this.isBitmap) {
             this.commitText();
         }
+
         this.boundingBoxTool.deactivateTool();
     }
 }
