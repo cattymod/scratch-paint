@@ -20,12 +20,21 @@ class StrokeWidthIndicator extends React.Component {
             'handleChangeStrokeWidth'
         ]);
     }
-    handleChangeStrokeWidth (newWidth) {
-        let changed = applyStrokeWidthToSelection(newWidth, this.props.textEditTarget);
-        if ((!this.props.strokeWidth || this.props.strokeWidth === 0) && newWidth > 0) {
-            const currentColorState = getColorsFromSelection(getSelectedLeafItems(), isBitmap(this.props.format));
 
-            // Color counts as null if either both colors are null or the primary color is null and it's solid
+    handleChangeStrokeWidth (newWidth) {
+        let changed = applyStrokeWidthToSelection(
+            newWidth,
+            this.props.textEditTarget
+        );
+
+        if ((!this.props.strokeWidth || this.props.strokeWidth === 0) && newWidth > 0) {
+            const currentColorState = getColorsFromSelection(
+                getSelectedLeafItems(),
+                isBitmap(this.props.format)
+            );
+
+            // Color counts as null if either both colors are null or the primary color
+            // is null and it's solid
             // TODO: consolidate this check in one place
             const wasNull = currentColorState.strokeColor === null &&
                 (currentColorState.strokeColor2 === null ||
@@ -34,24 +43,36 @@ class StrokeWidthIndicator extends React.Component {
             if (wasNull) {
                 changed = applyColorToSelection(
                     '#000',
-                    0, // colorIndex,
+                    0, // colorIndex
                     true, // isSolidGradient
                     true, // applyToStroke
-                    this.props.textEditTarget) ||
-                    changed;
+                    this.props.textEditTarget
+                ) || changed;
+
                 // If there's no previous stroke color, default to solid black
                 this.props.onChangeStrokeGradientType(GradientTypes.SOLID);
                 this.props.onChangeStrokeColor('#000');
             } else if (currentColorState.strokeColor !== MIXED) {
                 // Set color state from the selected item's stroke color
-                this.props.onChangeStrokeGradientType(currentColorState.strokeGradientType);
-                this.props.onChangeStrokeColor(parseColor(currentColorState.strokeColor).hex);
-                this.props.onChangeStrokeColor2(parseColor(currentColorState.strokeColor2).hex);
+                this.props.onChangeStrokeGradientType(
+                    currentColorState.strokeGradientType
+                );
+                this.props.onChangeStrokeColor(
+                    parseColor(currentColorState.strokeColor).hex
+                );
+                this.props.onChangeStrokeColor2(
+                    parseColor(currentColorState.strokeColor2).hex
+                );
             }
         }
+
         this.props.onChangeStrokeWidth(newWidth);
-        if (changed) this.props.onUpdateImage();
+
+        if (changed) {
+            this.props.onUpdateImage();
+        }
     }
+
     render () {
         return (
             <StrokeWidthIndicatorComponent
@@ -65,12 +86,12 @@ class StrokeWidthIndicator extends React.Component {
 
 const mapStateToProps = state => ({
     disabled: state.scratchPaint.mode === Modes.BRUSH ||
-        state.scratchPaint.mode === Modes.TEXT ||
         state.scratchPaint.mode === Modes.FILL,
     format: state.scratchPaint.format,
     strokeWidth: state.scratchPaint.color.strokeWidth,
     textEditTarget: state.scratchPaint.textEditTarget
 });
+
 const mapDispatchToProps = dispatch => ({
     onChangeStrokeColor: strokeColor => {
         dispatch(changeStrokeColor(strokeColor));
