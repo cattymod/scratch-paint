@@ -39,14 +39,31 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    onChangeColorIndex: index => dispatch(changeColorIndex(index)),
-    onChangeStrokeColor: color => dispatch(changeStrokeColor(color)),
-    onChangeStrokeColor2: color => dispatch(changeStrokeColor2(color)),
-    onChangeStrokeGradientType: type => dispatch(changeStrokeGradientType(type)),
-    onChangeStrokeWidth: width => dispatch(changeStrokeWidth(width)),
-    onCloseStrokeColor: () => dispatch(closeStrokeColor()),
-    onOpenStrokeColor: () => dispatch(openStrokeColor()),
-    onSetSelectedItems: items => dispatch(setSelectedItems(items))
+    onChangeColorIndex: index => {
+        dispatch(changeColorIndex(index));
+    },
+    onChangeColor: (strokeColor, index) => {
+        if (index === 0) {
+            dispatch(changeStrokeColor(strokeColor));
+        } else if (index === 1) {
+            dispatch(changeStrokeColor2(strokeColor));
+        }
+    },
+    onChangeStrokeWidth: strokeWidth => {
+        dispatch(changeStrokeWidth(strokeWidth));
+    },
+    onOpenColor: () => {
+        dispatch(openStrokeColor());
+    },
+    onCloseColor: () => {
+        dispatch(closeStrokeColor());
+    },
+    onChangeGradientType: gradientType => {
+        dispatch(changeStrokeGradientType(gradientType));
+    },
+    setSelectedItems: format => {
+        dispatch(setSelectedItems(getSelectedLeafItems(), isBitmap(format)));
+    }
 });
 
 export default connect(
