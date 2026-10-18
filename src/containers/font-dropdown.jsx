@@ -23,14 +23,7 @@ class FontDropdown extends React.Component {
             'handleChangeFontMarker',
             'handleChangeFontCurly',
             'handleChangeFontPixel',
-            'handleChangeFontPlayful',
-            'handleChangeFontBubbly',
-            'handleChangeFontTechnological',
-            'handleChangeFontBitsAndBytes',
-            'handleChangeFontArcade',
             'handleChangeFontScratch',
-            'handleChangeFontArchivo',
-            'handleChangeFontArchivoBlack',
             'handleChangeFontChinese',
             'handleChangeFontJapanese',
             'handleChangeFontKorean',
@@ -226,41 +219,6 @@ class FontDropdown extends React.Component {
             this.props.changeFont(Fonts.PIXEL);
         }
     }
-    handleChangeFontPlayful () {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.PLAYFUL);
-        }
-    }
-    handleChangeFontBitsAndBytes() {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.BITSANDBYTES);
-        }
-    }
-    handleChangeFontBubbly() {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.BUBBLY);
-        }
-    }
-    handleChangeFontTechnological() {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.TECHNOLOGICAL);
-        }
-    }
-    handleChangeFontArcade() {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.ARCADE);
-        }
-    }
-    handleChangeFontArchivo() {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.ARCHIVO);
-        }
-    }
-    handleChangeFontArchivoBlack() {
-        if (this.dropDown.isOpen()) {
-            this.props.changeFont(Fonts.ARCHIVOBLACK);
-        }
-    }
     handleChangeFontScratch() {
         if (this.dropDown.isOpen()) {
             this.props.changeFont(Fonts.SCRATCH);
@@ -378,13 +336,6 @@ class FontDropdown extends React.Component {
                 onHoverKorean={this.handleChangeFontKorean}
                 onHoverMarker={this.handleChangeFontMarker}
                 onHoverPixel={this.handleChangeFontPixel}
-                onHoverPlayful={this.handleChangeFontPlayful}
-                onHoverBubbly={this.handleChangeFontBubbly}
-                onHoverBitsAndBytes={this.handleChangeFontBitsAndBytes}
-                onHoverTechnological={this.handleChangeFontTechnological}
-                onHoverArcade={this.handleChangeFontArcade}
-                onHoverArchivo={this.handleChangeFontArchivo}
-                onHoverArchivoBlack={this.handleChangeFontArchivoBlack}
                 onHoverScratch={this.handleChangeFontScratch}
                 onHoverSansSerif={this.handleChangeFontSansSerif}
                 onHoverSerif={this.handleChangeFontSerif}
